@@ -13,7 +13,7 @@ int is_number(const char *str) {
 }
 
 
-int ps() {
+int main() {
     DIR *proc = opendir("/proc");
     if (!proc) {
         perror("Failed to open /proc");
