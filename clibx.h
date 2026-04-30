@@ -5,6 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <errno.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <libgen.h>
+#include <limits.h>
 
 /*
  * CLIBX - Minimal C Utility Library
@@ -402,6 +407,379 @@ static inline void read_line(char *buffer, size_t size) {
         if (len > 0 && buffer[len - 1] == '\n')
             buffer[len - 1] = '\0';
     }
+}
+
+//
+// Dynamic array (Vec)
+//
+
+typedef struct {
+    str *data;
+    size_t length;
+    size_t capacity;
+} str_vec;
+
+/*
+ * vec_init
+ * --------------------------------------
+ * Initialize an empty string vector.
+ * */
+static inline str_vec vec_init(void) {
+    return (str_vec){ .data = NULL, .length = 0, .capacity = 0 };
+}
+
+/*
+ * vec_push
+ * --------------------------------------
+ * Append a string to the vector.
+ * */
+static inline void vec_push(str_vec *vec, str value) {
+    if (vec->length >= vec->capacity) {
+        size_t new_cap = vec->capacity == 0 ? 8 : vec->capacity * 2;
+        vec->data = realloc(vec->data, sizeof(str) * new_cap);
+        ASSERT(vec->data != NULL, "vec_push: realloc failed");
+        vec->capacity = new_cap;
+    }
+    vec->data[vec->length++] = value;
+}
+
+/*
+ * vec_free
+ * --------------------------------------
+ * Free the vector's internal data.
+ * Does NOT free individual strings.
+ * */
+static inline void vec_free(str_vec *vec) {
+    FREE(vec->data);
+    vec->length = 0;
+    vec->capacity = 0;
+}
+
+//
+// String utilities
+//
+
+/*
+ * strtrim
+ * --------------------------------------
+ * Returns a newly allocated trimmed string (leading/trailing whitespace removed).
+ * Caller must free the result.
+ * --------------------------------------
+ * Time complexity: O(n)
+ * */
+static inline str strtrim(str s) {
+    if (!s || *s == '\0') return strdup("");
+
+    while (*s == ' ' || *s == '\t' || *s == '\n' || *s == '\r') s++;
+    if (*s == '\0') return strdup("");
+
+    str end = s + strlen(s) - 1;
+    while (end > s && (*end == ' ' || *end == '\t' || *end == '\n' || *end == '\r'))
+        end--;
+    *(end + 1) = '\0';
+
+    return strdup(s);
+}
+
+/*
+ * strsplit
+ * --------------------------------------
+ * Splits a string by delimiter into a vec.
+ * Caller must free vec and individual strings.
+ * --------------------------------------
+ * Time complexity: O(n)
+ * */
+static inline str_vec strsplit(str input, char delim) {
+    str_vec result = vec_init();
+    char *copy = strdup(input);
+    char *token = strtok(copy, &delim);
+
+    while (token != NULL) {
+        vec_push(&result, strdup(token));
+        token = strtok(NULL, &delim);
+    }
+
+    free(copy);
+    return result;
+}
+
+/*
+ * strjoin
+ * --------------------------------------
+ * Joins an array of strings with a separator.
+ * Returns a newly allocated string. Caller must free.
+ * --------------------------------------
+ * Time complexity: O(n)
+ * */
+static inline str strjoin(str *arr, size_t len, str sep) {
+    if (len == 0) return strdup("");
+
+    size_t total_len = 0;
+    for (size_t i = 0; i < len; i++) {
+        total_len += strlen(arr[i]);
+        if (i < len - 1) total_len += strlen(sep);
+    }
+
+    str result = NEW_ARRAY(char, total_len + 1);
+    ASSERT(result != NULL, "strjoin: malloc failed");
+
+    result[0] = '\0';
+    for (size_t i = 0; i < len; i++) {
+        strcat(result, arr[i]);
+        if (i < len - 1) strcat(result, sep);
+    }
+
+    return result;
+}
+
+/*
+ * str_contains
+ * --------------------------------------
+ * Checks if haystack contains needle.
+ * */
+#define STR_CONTAINS(haystack, needle) (strstr((haystack), (needle)) != NULL)
+
+/*
+ * str_to_lower
+ * --------------------------------------
+ * Converts string to lowercase in place. Returns same pointer.
+ * */
+static inline str str_to_lower(str s) {
+    for (size_t i = 0; s[i]; i++) {
+        if (s[i] >= 'A' && s[i] <= 'Z')
+            s[i] = s[i] + 32;
+    }
+    return s;
+}
+
+/*
+ * str_to_upper
+ * --------------------------------------
+ * Converts string to uppercase in place. Returns same pointer.
+ * */
+static inline str str_to_upper(str s) {
+    for (size_t i = 0; s[i]; i++) {
+        if (s[i] >= 'a' && s[i] <= 'z')
+            s[i] = s[i] - 32;
+    }
+    return s;
+}
+
+//
+// Path utilities
+//
+
+/*
+ * path_basename
+ * --------------------------------------
+ * Returns the filename component of a path.
+ * */
+static inline str path_basename(str path) {
+    char *copy = strdup(path);
+    str result = strdup(basename(copy));
+    free(copy);
+    return result;
+}
+
+/*
+ * path_dirname
+ * --------------------------------------
+ * Returns the directory component of a path.
+ * */
+static inline str path_dirname(str path) {
+    char *copy = strdup(path);
+    str result = strdup(dirname(copy));
+    free(copy);
+    return result;
+}
+
+/*
+ * path_extension
+ * --------------------------------------
+ * Returns the file extension (without dot), or empty string.
+ * */
+static inline str path_extension(str path) {
+    str base = path_basename(path);
+    str dot = strrchr(base, '.');
+    str ext = dot ? strdup(dot + 1) : strdup("");
+    free(base);
+    return ext;
+}
+
+/*
+ * path_join
+ * --------------------------------------
+ * Joins two path components with '/'.
+ * Returns a newly allocated string. Caller must free.
+ * */
+static inline str path_join(str a, str b) {
+    size_t len_a = strlen(a);
+    size_t len_b = strlen(b);
+    size_t sep = (len_a > 0 && a[len_a - 1] != '/') ? 1 : 0;
+
+    str result = NEW_ARRAY(char, len_a + sep + len_b + 1);
+    ASSERT(result != NULL, "path_join: malloc failed");
+
+    sprintf(result, "%s%s%s", a, sep ? "/" : "", b);
+    return result;
+}
+
+/*
+ * path_exists
+ * --------------------------------------
+ * Checks if a path exists on disk.
+ * */
+static inline clibx_bool path_exists(str path) {
+    return access(path, F_OK) == 0;
+}
+
+/*
+ * path_is_dir
+ * --------------------------------------
+ * Checks if a path is a directory.
+ * */
+static inline clibx_bool path_is_dir(str path) {
+    struct stat st;
+    return (stat(path, &st) == 0 && S_ISDIR(st.st_mode));
+}
+
+/*
+ * path_is_file
+ * --------------------------------------
+ * Checks if a path is a regular file.
+ * */
+static inline clibx_bool path_is_file(str path) {
+    struct stat st;
+    return (stat(path, &st) == 0 && S_ISREG(st.st_mode));
+}
+
+/*
+ * path_file_size
+ * --------------------------------------
+ * Returns file size in bytes, or -1 on error.
+ * */
+static inline long path_file_size(str path) {
+    struct stat st;
+    if (stat(path, &st) != 0) return -1;
+    return (long)st.st_size;
+}
+
+//
+// Hash Map
+//
+
+#define CLIBX_HASHMAP_DEFAULT_CAPACITY 64
+
+typedef struct clibx_hashmap_entry {
+    str key;
+    str value;
+    struct clibx_hashmap_entry *next;
+} clibx_hashmap_entry;
+
+typedef struct {
+    clibx_hashmap_entry **buckets;
+    size_t capacity;
+    size_t count;
+} clibx_hashmap;
+
+/*
+ * hashmap_hash
+ * --------------------------------------
+ * Simple DJB2 hash function.
+ * */
+static inline unsigned long hashmap_hash(str key) {
+    unsigned long hash = 5381;
+    int c;
+    while ((c = *key++))
+        hash = ((hash << 5) + hash) + c;
+    return hash;
+}
+
+/*
+ * hashmap_init
+ * --------------------------------------
+ * Create a new empty hashmap.
+ * */
+static inline clibx_hashmap hashmap_init(void) {
+    clibx_hashmap map;
+    map.capacity = CLIBX_HASHMAP_DEFAULT_CAPACITY;
+    map.count = 0;
+    map.buckets = NEW_ARRAY(clibx_hashmap_entry*, map.capacity);
+    memset(map.buckets, 0, sizeof(clibx_hashmap_entry*) * map.capacity);
+    return map;
+}
+
+/*
+ * hashmap_put
+ * --------------------------------------
+ * Insert or update a key-value pair.
+ * */
+static inline void hashmap_put(clibx_hashmap *map, str key, str value) {
+    unsigned long hash = hashmap_hash(key) % map->capacity;
+    clibx_hashmap_entry *entry = map->buckets[hash];
+
+    while (entry != NULL) {
+        if (STREQ(entry->key, key)) {
+            free(entry->value);
+            entry->value = strdup(value);
+            return;
+        }
+        entry = entry->next;
+    }
+
+    clibx_hashmap_entry *new_entry = NEW_ZEROED(clibx_hashmap_entry);
+    new_entry->key = strdup(key);
+    new_entry->value = strdup(value);
+    new_entry->next = map->buckets[hash];
+    map->buckets[hash] = new_entry;
+    map->count++;
+}
+
+/*
+ * hashmap_get
+ * --------------------------------------
+ * Get value by key. Returns NULL if not found.
+ * */
+static inline str hashmap_get(clibx_hashmap *map, str key) {
+    unsigned long hash = hashmap_hash(key) % map->capacity;
+    clibx_hashmap_entry *entry = map->buckets[hash];
+
+    while (entry != NULL) {
+        if (STREQ(entry->key, key))
+            return entry->value;
+        entry = entry->next;
+    }
+    return NULL;
+}
+
+/*
+ * hashmap_contains
+ * --------------------------------------
+ * Check if key exists in hashmap.
+ * */
+static inline clibx_bool hashmap_contains(clibx_hashmap *map, str key) {
+    return hashmap_get(map, key) != NULL;
+}
+
+/*
+ * hashmap_free
+ * --------------------------------------
+ * Free all memory used by the hashmap.
+ * */
+static inline void hashmap_free(clibx_hashmap *map) {
+    for (size_t i = 0; i < map->capacity; i++) {
+        clibx_hashmap_entry *entry = map->buckets[i];
+        while (entry != NULL) {
+            clibx_hashmap_entry *next = entry->next;
+            free(entry->key);
+            free(entry->value);
+            free(entry);
+            entry = next;
+        }
+    }
+    FREE(map->buckets);
+    map->count = 0;
+    map->capacity = 0;
 }
 
 #endif /* CLIBX_H */
