@@ -1,6 +1,8 @@
 #ifndef CLIBX_H
 #define CLIBX_H
 
+#define _POSIX_C_SOURCE 200809L
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -143,6 +145,7 @@ static inline void print_char_array(const char *arr, size_t len) {
  * t = 0 -> v0, t = 1 -> v1
  * --------------------------------------
  * Complexity: O(1)
+ * https://en.wikipedia.org/wiki/Linear_interpolation
  * */
 #define LERP(v0, v1, t) ((v0) + (t) * ((v1) - (v0)))
 
@@ -315,6 +318,23 @@ static inline void print_char_array(const char *arr, size_t len) {
 #define FOR_RANGE(i, start, end) for (size_t i = (start); i < (end); i++)
 
 //
+// Bitwise operations
+//
+
+/*
+ * BIT / SET_BIT / CLEAR_BIT / TOGGLE_BIT / CHECK_BIT
+ * --------------------------------------
+ * Bit manipulation macros.
+ * --------------------------------------
+ * Complexity: O(1)
+ * */
+#define BIT(x) (1ULL << (x))
+#define SET_BIT(val, pos)   ((val) |= BIT(pos))
+#define CLEAR_BIT(val, pos) ((val) &= ~BIT(pos))
+#define TOGGLE_BIT(val, pos) ((val) ^= BIT(pos))
+#define CHECK_BIT(val, pos) (((val) & BIT(pos)) != 0)
+
+//
 // Boolean helpers
 //
 
@@ -470,15 +490,19 @@ static inline void vec_free(str_vec *vec) {
 static inline str strtrim(str s) {
     if (!s || *s == '\0') return strdup("");
 
-    while (*s == ' ' || *s == '\t' || *s == '\n' || *s == '\r') s++;
-    if (*s == '\0') return strdup("");
+    str copy = strdup(s);
+    str start = copy;
+    while (*start == ' ' || *start == '\t' || *start == '\n' || *start == '\r') start++;
+    if (*start == '\0') { free(copy); return strdup(""); }
 
-    str end = s + strlen(s) - 1;
-    while (end > s && (*end == ' ' || *end == '\t' || *end == '\n' || *end == '\r'))
+    str end = start + strlen(start) - 1;
+    while (end > start && (*end == ' ' || *end == '\t' || *end == '\n' || *end == '\r'))
         end--;
     *(end + 1) = '\0';
 
-    return strdup(s);
+    str result = strdup(start);
+    free(copy);
+    return result;
 }
 
 /*
@@ -492,11 +516,12 @@ static inline str strtrim(str s) {
 static inline str_vec strsplit(str input, char delim) {
     str_vec result = vec_init();
     char *copy = strdup(input);
-    char *token = strtok(copy, &delim);
+    char delim_str[2] = {delim, '\0'};
+    char *token = strtok(copy, delim_str);
 
     while (token != NULL) {
         vec_push(&result, strdup(token));
-        token = strtok(NULL, &delim);
+        token = strtok(NULL, delim_str);
     }
 
     free(copy);
