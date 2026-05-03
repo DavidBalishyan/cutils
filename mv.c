@@ -5,6 +5,17 @@
  * Uses the POSIX rename() syscall to rename or relocate a file.
  */
 int main(int argc, char **argv) {
+    for (int i = 1; i < argc; i++) {
+        if (STREQ(argv[i], "--help") || STREQ(argv[i], "-h")) {
+            printf("Usage: %s <source> <destination>\n", argv[0]);
+            printf("Move or rename a file from source to destination.\n");
+            return EXIT_SUCCESS;
+        } else if (STREQ(argv[i], "--version") || STREQ(argv[i], "-v")) {
+            printf("cmv (cutils) 1.0.0\n");
+            return EXIT_SUCCESS;
+        }
+    }
+
     if (argc < 3) {
         ERROR("usage: cmv <source> <destination>");
     }

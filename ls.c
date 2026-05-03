@@ -81,6 +81,20 @@ static int cmp_str(const void *a, const void *b) {
  * Supports -l, -a, -la, and --long-all.
  */
 int main(int argc, char **argv) {
+    for (int i = 1; i < argc; i++) {
+        if (STREQ(argv[i], "--help") || STREQ(argv[i], "-h")) {
+            printf("Usage: %s [options] [directory]\n", argv[0]);
+            printf("List directory contents.\n");
+            printf("  -l, --long      Long format\n");
+            printf("  -a, --all       Show hidden files\n");
+            printf("  -la, --long-all Long format with hidden files\n");
+            return EXIT_SUCCESS;
+        } else if (STREQ(argv[i], "--version") || STREQ(argv[i], "-v")) {
+            printf("cls (cutils) 1.0.0\n");
+            return EXIT_SUCCESS;
+        }
+    }
+
     clibx_bool long_format = clibx_false;
     clibx_bool show_hidden = clibx_false;
     str dir = ".";

@@ -12,6 +12,18 @@ static int cmp_str(const void *a, const void *b) {
  * and print the result. Supports reverse order.
  */
 int main(int argc, char **argv) {
+    for (int i = 1; i < argc; i++) {
+        if (STREQ(argv[i], "--help") || STREQ(argv[i], "-h")) {
+            printf("Usage: %s [-r|--reverse] [file]\n", argv[0]);
+            printf("Sort lines from a file or stdin alphabetically.\n");
+            printf("  -r, --reverse  Sort in reverse order\n");
+            return EXIT_SUCCESS;
+        } else if (STREQ(argv[i], "--version") || STREQ(argv[i], "-v")) {
+            printf("csort (cutils) 1.0.0\n");
+            return EXIT_SUCCESS;
+        }
+    }
+
     str_vec lines = vec_init();
     clibx_bool reverse = clibx_false;
     str file = NULL;

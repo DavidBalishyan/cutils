@@ -36,8 +36,20 @@ static void copy_file(str src, str dest) {
  * the source file is copied into that directory using its basename.
  */
 int main(int argc, char **argv) {
+    for (int i = 1; i < argc; i++) {
+        if (STREQ(argv[i], "--help") || STREQ(argv[i], "-h")) {
+            printf("Usage: %s <source> <destination>\n", argv[0]);
+            printf("Copy a file from source to destination.\n");
+            printf("If destination is a directory, the file is copied into it.\n");
+            return EXIT_SUCCESS;
+        } else if (STREQ(argv[i], "--version") || STREQ(argv[i], "-v")) {
+            printf("ccp (cutils) 1.0.0\n");
+            return EXIT_SUCCESS;
+        }
+    }
+
     if (argc < 3) {
-        ERROR("usage: ccp <source> <destination>");
+        ERROR("usage: %s <source> <destination>", argv[0]);
     }
 
     str src = argv[1];

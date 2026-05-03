@@ -30,6 +30,17 @@ static void head_file(str path, int n) {
  * Supports -nN and -n N option styles.
  */
 int main(int argc, char **argv) {
+    for (int i = 1; i < argc; i++) {
+        if (STREQ(argv[i], "--help") || STREQ(argv[i], "-h")) {
+            printf("Usage: %s [-n N] [file]\n", argv[0]);
+            printf("Print the first N lines of a file or stdin (default 10).\n");
+            return EXIT_SUCCESS;
+        } else if (STREQ(argv[i], "--version") || STREQ(argv[i], "-v")) {
+            printf("chead (cutils) 1.0.0\n");
+            return EXIT_SUCCESS;
+        }
+    }
+
     int n = DEFAULT_LINES;
     str file = NULL;
 

@@ -7,15 +7,28 @@
  * directly to stdout.
  */
 int main(int argc, char **argv) {
+    for (int i = 1; i < argc; i++) {
+        if (STREQ(argv[i], "--help") || STREQ(argv[i], "-h")) {
+            printf("Usage: %s <file>\n", argv[0]);
+            printf("Print the contents of a file to stdout.\n");
+            return EXIT_SUCCESS;
+        } else if (STREQ(argv[i], "--version") || STREQ(argv[i], "-v")) {
+            printf("ccat (cutils) 1.0.0\n");
+            return EXIT_SUCCESS;
+        }
+		
+    }
+
     if (argc < 2) {
-        printf("Usage: %s <file-path>\n", argv[0]);
-        return 1;
+        ERROR("Usage: %s <file-path>", argv[0]);
+        return EXIT_FAILURE;
     }
 
     char *filename = argv[1];
     FILE *fp = fopen(filename, "r");
     if (fp == NULL) {
         ERROR("File reading error");
+        return EXIT_FAILURE;
     }
 
     /* Keep reading until EOF. fgetc returns int to distinguish EOF. */
@@ -30,5 +43,5 @@ int main(int argc, char **argv) {
     /* Provide a final newline for nicer terminal output. */
     putchar('\n');
     fclose(fp);
-    return 0;
+    return EXIT_SUCCESS;
 }
