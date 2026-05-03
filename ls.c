@@ -4,6 +4,10 @@
 #include <pwd.h>
 #include <grp.h>
 
+/*
+ * print_permissions - convert a mode bitmask into a human-readable
+ * permission string like "-rw-r--r--".
+ */
 static void print_permissions(mode_t mode) {
     putchar(S_ISDIR(mode) ? 'd' : '-');
     putchar(mode & S_IRUSR ? 'r' : '-');
@@ -18,6 +22,9 @@ static void print_permissions(mode_t mode) {
     putchar(' ');
 }
 
+/*
+ * format_size - pretty-print file sizes in a compact unit form.
+ */
 static str format_size(off_t size) {
     static char buf[32];
     if (size < 1024) {
@@ -32,6 +39,9 @@ static str format_size(off_t size) {
     return buf;
 }
 
+/*
+ * list_file - output one directory entry in either short or long format.
+ */
 static void list_file(str path, str name, clibx_bool long_format) {
     struct stat st;
     if (lstat(path, &st) != 0) {
@@ -66,6 +76,10 @@ static int cmp_str(const void *a, const void *b) {
     return strcmp(*(const str *)a, *(const str *)b);
 }
 
+/*
+ * cls - a simplified ls implementation.
+ * Supports -l, -a, -la, and --long-all.
+ */
 int main(int argc, char **argv) {
     clibx_bool long_format = clibx_false;
     clibx_bool show_hidden = clibx_false;

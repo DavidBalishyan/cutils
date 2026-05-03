@@ -1,9 +1,16 @@
 #include "clibx.h"
 
+/*
+ * compare two strings for qsort.
+ */
 static int cmp_str(const void *a, const void *b) {
     return strcmp(*(const str *)a, *(const str *)b);
 }
 
+/*
+ * csort - read lines from a file or stdin, sort them alphabetically,
+ * and print the result. Supports reverse order.
+ */
 int main(int argc, char **argv) {
     str_vec lines = vec_init();
     clibx_bool reverse = clibx_false;
@@ -24,7 +31,6 @@ int main(int argc, char **argv) {
 
     str line = NULL;
     size_t len = 0;
-
     while (getline(&line, &len, fp) != -1) {
         vec_push(&lines, strdup(line));
     }

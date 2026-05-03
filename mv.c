@@ -1,5 +1,9 @@
 #include "clibx.h"
 
+/*
+ * cmv - minimal move/rename implementation.
+ * Uses the POSIX rename() syscall to rename or relocate a file.
+ */
 int main(int argc, char **argv) {
     if (argc < 3) {
         ERROR("usage: cmv <source> <destination>");

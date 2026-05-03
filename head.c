@@ -2,6 +2,10 @@
 
 #define DEFAULT_LINES 10
 
+/*
+ * head_file - print the first n lines from a file.
+ * Uses getline() to support arbitrary line lengths.
+ */
 static void head_file(str path, int n) {
     FILE *fp = fopen(path, "r");
     if (!fp) {
@@ -21,6 +25,10 @@ static void head_file(str path, int n) {
     fclose(fp);
 }
 
+/*
+ * chead - prints the first N lines of a file or stdin.
+ * Supports -nN and -n N option styles.
+ */
 int main(int argc, char **argv) {
     int n = DEFAULT_LINES;
     str file = NULL;
@@ -54,6 +62,5 @@ int main(int argc, char **argv) {
     }
 
     head_file(file, n);
-
     return EXIT_SUCCESS;
 }

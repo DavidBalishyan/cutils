@@ -1,51 +1,72 @@
 # Cutils
 
-A from-scratch reimplementation of select GNU coreutils in C, built for fun and learning.
+A from-scratch reimplementation of selected GNU core utilities in C, built for learning and experimentation.
 
-Powered by [`clibx.h`](clibx.h) - a single-header utility library with macros for memory, math, logging, type introspection, dynamic arrays, hash maps, and more.
+This repository contains a small toolchain of command-line utilities that mimic common Unix behavior with minimal external dependencies.
+All programs are compiled with [`clibx.h`](https://davidbalishyan.github.io/clibx), a lightweight single-header utility library that centralizes common helpers for error handling, strings, dynamic arrays, file paths, and more.
+
+---
+
+## Project goals
+
+- Recreate classic Unix tools in readable, idiomatic C.
+- Keep implementations small and understandable.
+- Preserve Unix-style CLI behavior wherever practical.
+- Make the codebase easy to extend with additional tools later.
 
 ---
 
 ## Implemented tools
 
-| Tool     | Description                              | GNU equivalent |
-|----------|------------------------------------------|----------------|
-| `ccat`  | Print the contents of a file to stdout   | `cat`          |
-| `cecho` | Print arguments to stdout                | `echo`         |
-| `cps`   | List running processes from `/proc`      | `ps`           |
-| `cls`   | List directory contents                  | `ls`           |
-| `cwc`   | Count lines, words, and bytes            | `wc`           |
-| `chead` | Print first N lines of a file            | `head`         |
-| `ctail` | Print last N lines of a file             | `tail`         |
-| `csort` | Sort lines of text                       | `sort`         |
-| `ccp`   | Copy files                               | `cp`           |
-| `cmv`   | Move or rename files                     | `mv`           |
+| Tool     | Binary   | Primary behavior | Notes |
+|----------|----------|------------------|-------|
+| `ccat`   | `bin/ccat` | Print a file to stdout character-by-character | Simple file reader; adds a trailing newline. |
+| `cecho`  | `bin/cecho` | Print command arguments separated by spaces | No special escape handling. |
+| `cps`    | `bin/cps` | List running Linux processes from `/proc` | Reads `/proc/<pid>/cmdline`. Linux-only. |
+| `cls`    | `bin/cls` | List directory contents | Supports `-l`, `-a`, and `-la`. |
+| `cwc`    | `bin/cwc` | Count lines, words, and bytes | Accepts either stdin or one or more files. |
+| `chead`  | `bin/chead` | Print the first N lines of input | Supports `-nN` and `-n N`. |
+| `ctail`  | `bin/ctail` | Print the last N lines of input | Uses a dynamic line buffer. |
+| `csort`  | `bin/csort` | Sort lines lexicographically | Supports reverse order. |
+| `ccp`    | `bin/ccp` | Copy files | Preserves filename when destination is a directory. |
+| `cmv`    | `bin/cmv` | Move/rename files | Wraps `rename()`. |
 
 ---
 
-## Building
+## Build & install
 
-Requires a C11-compatible compiler (`gcc` or `clang`) and `make`.
+### Requirements
+
+- C11-compatible compiler such as `gcc` or `clang`
+- `make`
+
+### Build
 
 ```sh
-make          # builds all tools into ./bin/
-make clean    # removes ./bin/
-make test     # runs a quick smoke-test for each tool
+make
 ```
 
-### Install to `~/.local/bin`
+This compiles each utility into the `bin/` directory.
+
+### Cleaning
+
+```sh
+make clean
+```
+
+### Install
 
 ```sh
 make install
 ```
 
-Override the prefix to install elsewhere:
+Install to an alternate directory:
 
 ```sh
-make install PREFIX=/usr/local   # installs to /usr/local/bin (may need sudo)
+make install PREFIX=/usr/local
 ```
 
-Uninstall:
+### Uninstall
 
 ```sh
 make uninstall
@@ -58,18 +79,18 @@ make uninstall
 ### ccat
 
 ```sh
-./bin/ccat <file>
+./bin/ccat file.txt
 ```
 
-Reads a file character by character and prints it to stdout. Exits with an error if the file cannot be opened.
+Prints the file contents to stdout and appends a final newline.
 
 ### cecho
 
 ```sh
-./bin/cecho [args...]
+./bin/cecho Hello world
 ```
 
-Prints all arguments separated by spaces, followed by a newline.
+Prints each argument separated by a single space.
 
 ### cps
 
@@ -77,7 +98,8 @@ Prints all arguments separated by spaces, followed by a newline.
 ./bin/cps
 ```
 
-Reads `/proc` to list all running processes with their PID and command line. Linux only.
+Lists processes by reading `/proc` and printing PID + command line.
+This utility is intended for Linux systems only.
 
 ### cls
 
@@ -85,10 +107,10 @@ Reads `/proc` to list all running processes with their PID and command line. Lin
 ./bin/cls [options] [directory]
 ```
 
-Lists directory contents. Options:
-- `-l` / `--long` - Long format (permissions, size, date)
-- `-a` / `--all` - Show hidden files (dotfiles)
-- `-la` - Combined long format with hidden files
+Options:
+- `-l`, `--long` - use long listing format.
+- `-a`, `--all` - show hidden files.
+- `-la`, `-al`, `--long-all` - combine long format and hidden files.
 
 ### cwc
 
@@ -96,7 +118,8 @@ Lists directory contents. Options:
 ./bin/cwc [files...]
 ```
 
-Counts lines, words, and bytes. Reads from stdin if no file is given.
+Counts lines, words, and bytes.
+If no filename is provided, it reads from stdin.
 
 ### chead
 
@@ -104,7 +127,8 @@ Counts lines, words, and bytes. Reads from stdin if no file is given.
 ./bin/chead [-n N] [file]
 ```
 
-Prints the first N lines (default: 10). Reads from stdin if no file is given.
+Prints the first `N` lines of a file or stdin. Defaults to `10` lines.
+Supports both `-n10` and `-n 10` forms.
 
 ### ctail
 
@@ -112,7 +136,7 @@ Prints the first N lines (default: 10). Reads from stdin if no file is given.
 ./bin/ctail [-n N] [file]
 ```
 
-Prints the last N lines (default: 10). Reads from stdin if no file is given.
+Prints the last `N` lines of a file or stdin. Defaults to `10` lines.
 
 ### csort
 
@@ -120,9 +144,8 @@ Prints the last N lines (default: 10). Reads from stdin if no file is given.
 ./bin/csort [options] [file]
 ```
 
-Sorts lines alphabetically. Options:
-- `-r` / `--reverse` - Reverse order
-- Reads from stdin if no file is given.
+Options:
+- `-r`, `--reverse` - sort in reverse order.
 
 ### ccp
 
@@ -130,7 +153,8 @@ Sorts lines alphabetically. Options:
 ./bin/ccp <source> <destination>
 ```
 
-Copies a file. If destination is a directory, copies into it preserving the filename.
+Copies a file to the destination path. If the destination is a directory,
+`ccp` copies the file into that directory while preserving the source filename.
 
 ### cmv
 
@@ -138,32 +162,21 @@ Copies a file. If destination is a directory, copies into it preserving the file
 ./bin/cmv <source> <destination>
 ```
 
-Moves or renames a file.
+Moves or renames a file using the POSIX `rename()` syscall
 
 ---
 
-## clibx.h
+## Implementation notes
 
-A single-header C utility library included across all tools, developed at [github.com/DavidBalishyan/clibx](https://github.com/DavidBalishyan/clibx). Highlights:
-
-- **Array helpers** - `ARRAY_SIZE`, `print_int_array`, `print_double_array`
-- **Math macros** - `MIN`, `MAX`, `CLAMP`, `ABS`, `LERP`, `IS_POWER_OF_2`, `NEXT_POWER_OF_2`
-- **Memory macros** - `NEW`, `NEW_ARRAY`, `NEW_ZEROED`, `FREE`
-- **Debug/logging** - `LOG`, `ERROR`, `ASSERT`, `UNIMPLEMENTED`, `UNREACHABLE`
-- **Loop helpers** - `FOR(i, n)`, `FOR_RANGE(i, start, end)`
-- **Boolean shim** - `clibx_bool`, `clibx_true`, `clibx_false` for C99/C11
-- **String macros** - `STREQ`, `STR_EMPTY`, `STR_STARTS_WITH`, `STR_CONTAINS`
-- **String functions** - `strtrim`, `strsplit`, `strjoin`, `str_to_lower`, `str_to_upper`
-- **Generic printing** - `PRINT(x)` dispatches on type via `_Generic`
-- **GCC/Clang extras** - `SWAP`, `LIKELY`, `UNLIKELY`, `UNUSED`, `DEPRECATED`, `NODISCARD`
-- **Dynamic arrays** - `str_vec` with `vec_init`, `vec_push`, `vec_free`
-- **Path utilities** - `path_basename`, `path_dirname`, `path_extension`, `path_join`, `path_exists`, `path_is_dir`, `path_is_file`, `path_file_size`
-- **Hash map** - `clibx_hashmap` with `hashmap_init`, `hashmap_put`, `hashmap_get`, `hashmap_contains`, `hashmap_free`
-- **I/O utilities** - `read_line`
+- Most utilities are intentionally minimal: they focus on readable control flow rather than handling every edge case.
+- `clibx.h` provides shared helpers for memory, strings, error reporting, and dynamic arrays.
+- `chead` and `ctail` use `getline()` to support arbitrary-length input lines.
+- `csort` loads the entire input into memory before sorting, which is fine for small to moderate text but not optimized for very large files.
+- `cps` enumerates numeric directories in `/proc`, so it is only usable on Linux-like systems.
 
 ---
 
 ## License
 
-This project is licensed under the [MIT](https://opensource.org/license/MIT) license<br>
-[See the LICENSE file](LICENSE)
+This project is licensed under the [MIT](https://opensource.org/license/MIT) license.
+See the [LICENSE](LICENSE) file for details.

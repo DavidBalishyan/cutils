@@ -2,6 +2,11 @@
 
 #define DEFAULT_LINES 10
 
+/*
+ * tail_file - store all lines then print the last n lines.
+ * The implementation is simple and easy to understand,
+ * though not optimized for extremely large files.
+ */
 static void tail_file(str path, int n) {
     str_vec lines = vec_init();
     FILE *fp = fopen(path, "r");
@@ -11,7 +16,6 @@ static void tail_file(str path, int n) {
 
     str line = NULL;
     size_t len = 0;
-
     while (getline(&line, &len, fp) != -1) {
         vec_push(&lines, strdup(line));
     }
@@ -28,6 +32,9 @@ static void tail_file(str path, int n) {
     vec_free(&lines);
 }
 
+/*
+ * ctail - print the last N lines of a file or stdin.
+ */
 int main(int argc, char **argv) {
     int n = DEFAULT_LINES;
     str file = NULL;
@@ -62,11 +69,9 @@ int main(int argc, char **argv) {
             free(lines.data[i]);
         }
         vec_free(&lines);
-
         return EXIT_SUCCESS;
     }
 
     tail_file(file, n);
-
     return EXIT_SUCCESS;
 }

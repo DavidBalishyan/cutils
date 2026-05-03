@@ -2,6 +2,10 @@
 
 #define BUF_SIZE 8192
 
+/*
+ * copy_file - copy a binary file from src to dest.
+ * Uses buffered reads and writes to handle large files efficiently.
+ */
 static void copy_file(str src, str dest) {
     FILE *in = fopen(src, "rb");
     if (!in) {
@@ -16,7 +20,6 @@ static void copy_file(str src, str dest) {
 
     char buf[BUF_SIZE];
     size_t bytes;
-
     while ((bytes = fread(buf, 1, BUF_SIZE, in)) > 0) {
         if (fwrite(buf, 1, bytes, out) != bytes) {
             ERROR("write to '%s' failed: %s", dest, strerror(errno));
@@ -27,6 +30,11 @@ static void copy_file(str src, str dest) {
     fclose(out);
 }
 
+/*
+ * ccp - simple file copy tool.
+ * Accepts a source and destination path. If the destination is a directory,
+ * the source file is copied into that directory using its basename.
+ */
 int main(int argc, char **argv) {
     if (argc < 3) {
         ERROR("usage: ccp <source> <destination>");
@@ -39,13 +47,7 @@ int main(int argc, char **argv) {
         ERROR("source '%s' does not exist", src);
     }
 
-    if (path_is_dir(src) && path_is_dir(dest)) {
-        str base = path_basename(src);
-        str full_dest = path_join(dest, base);
-        copy_file(src, full_dest);
-        free(base);
-        free(full_dest);
-    } else if (path_is_dir(dest)) {
+    if (path_is_dir(dest)) {
         str base = path_basename(src);
         str full_dest = path_join(dest, base);
         copy_file(src, full_dest);

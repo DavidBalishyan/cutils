@@ -21,11 +21,6 @@ int main() {
     }
     struct dirent *entry;
 
-    if (!proc) {
-        perror("opendir /proc");
-        return 1;
-    }
-
     printf("%5s %s\n", "PID", "CMD");
 
     while ((entry = readdir(proc)) != NULL) {
