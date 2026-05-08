@@ -1,4 +1,5 @@
 #include "clibx.h"
+#include <errno.h>
 
 /*
  * cmv - minimal move/rename implementation.
