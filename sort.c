@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    str_vec lines = vec_init();
+    clibx_str_vec lines = vec_init();
     clibx_bool reverse = clibx_false;
     str file = NULL;
 

@@ -8,7 +8,7 @@
  * though not optimized for extremely large files.
  */
 static void tail_file(str path, int n) {
-    str_vec lines = vec_init();
+    clibx_str_vec lines = vec_init();
     FILE *fp = fopen(path, "r");
     if (!fp) {
         ERROR("cannot open '%s': %s", path, strerror(errno));
@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
     }
 
     if (!file) {
-        str_vec lines = vec_init();
+        clibx_str_vec lines = vec_init();
         str line = NULL;
         size_t len = 0;
 

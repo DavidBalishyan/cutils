@@ -118,7 +118,7 @@ int main(int argc, char **argv) {
         ERROR("cannot open directory '%s': %s", dir, strerror(errno));
     }
 
-    str_vec entries = vec_init();
+    clibx_str_vec entries = vec_init();
     struct dirent *ep;
 
     while ((ep = readdir(dp)) != NULL) {

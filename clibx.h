@@ -6,12 +6,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 #include <errno.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <libgen.h>
 #include <limits.h>
+#include <stdint.h>
 
 /*
  * CLIBX - Minimal C Utility Library
@@ -111,6 +111,133 @@ static inline void print_char_array(const char *arr, size_t len) {
 //
 
 /*
+ * clibx_log2
+ * --------------------------------------
+ * Computes the base-2 logarithm of x.
+ * Returns NaN if x <= 0.
+ * --------------------------------------
+ * Time complexity: O(1)
+ * */
+static inline double clibx_log2(double x) {
+    union {
+        double d;
+        uint64_t u;
+    } v = { x };
+
+    // NaN for invalid input
+    if (x <= 0.0)
+        return 0.0 / 0.0;
+
+    // Extract exponent
+    int exponent = (int)((v.u >> 52) & 0x7FF) - 1023;
+
+    // Normalize mantissa into [1, 2)
+    v.u = (v.u & ((1ULL << 52) - 1)) | (1023ULL << 52);
+    double m = v.d;
+
+    // Compute log2(m)
+    //
+    // Using:
+    //
+    // log2(m) = ln(m) / ln(2)
+    //
+    // and:
+    //
+    // ln(m) = 2 * (y + y^3/3 + y^5/5 + ...)
+    //
+    // where:
+    //
+    // y = (m - 1) / (m + 1)
+
+    double y  = (m - 1.0) / (m + 1.0);
+    double y2 = y * y;
+
+    double ln_m =
+        2.0 * (
+            y +
+            (y * y2) / 3.0 +
+            (y * y2 * y2) / 5.0 +
+            (y * y2 * y2 * y2) / 7.0 +
+            (y * y2 * y2 * y2 * y2) / 9.0
+        );
+
+    // 1 / ln(2)
+    const double INV_LN2 = 1.4426950408889634074;
+
+    return exponent + ln_m * INV_LN2;
+}
+/*
+ * clibx_pow
+ * --------------------------------------
+ * Computes base raised to the power of exp.
+ * Only supports integer exponents. Returns NaN for fractional exponents.
+ * --------------------------------------
+ * Time complexity: O(log exp)
+ * */
+static inline double clibx_pow(double base, double exp) {
+    if (exp == 0.0) return 1.0;
+    if (base == 0.0) return 0.0;
+    if (exp == 1.0) return base;
+
+    // Check if exp is integer
+    double intpart = (int)exp;
+    if (exp != intpart) return 0.0 / 0.0; // NaN
+
+    // Handle negative exponents
+    if (exp < 0.0) {
+        base = 1.0 / base;
+        exp = -exp;
+    }
+
+    // Integer exponent: exponentiation by squaring
+    double result = 1.0;
+    int iexp = (int)exp;
+    while (iexp > 0) {
+        if (iexp % 2 == 1) {
+            result *= base;
+        }
+        base *= base;
+        iexp /= 2;
+    }
+    return result;
+}
+
+/*
+ * clibx_ceil
+ * --------------------------------------
+ * Returns the smallest integer greater than or equal to x.
+ * --------------------------------------
+ * Time complexity: O(1)
+ * */
+static inline double clibx_ceil(double x) {
+    if (x == (int)x) return x;
+    return (x > 0.0) ? (int)x + 1 : (int)x;
+}
+
+/*
+ * clibx_floor
+ * --------------------------------------
+ * Returns the largest integer less than or equal to x.
+ * --------------------------------------
+ * Time complexity: O(1)
+ * */
+static inline double clibx_floor(double x) {
+    if (x == (int)x) return x;
+    return (x > 0.0) ? (int)x : (int)x - 1;
+}
+
+/*
+ * clibx_round
+ * --------------------------------------
+ * Rounds x to the nearest integer.
+ * --------------------------------------
+ * Time complexity: O(1)
+ * */
+static inline double clibx_round(double x) {
+    return (x >= 0.0) ? clibx_floor(x + 0.5) : clibx_ceil(x - 0.5);
+}
+
+/*
  * MIN / MAX
  * --------------------------------------
  * Returns the minimum / maximum of two values.
@@ -166,7 +293,7 @@ static inline void print_char_array(const char *arr, size_t len) {
  * --------------------------------------
  * Complexity: O(1)
  * */
-#define NEXT_POWER_OF_2(n) ((int)pow(2, ceil(log2((n) + 1))))
+#define NEXT_POWER_OF_2(n) ((int)clibx_pow(2, clibx_ceil(clibx_log2((n) + 1))))
 
 //
 // Memory utilities
@@ -335,10 +462,11 @@ static inline void print_char_array(const char *arr, size_t len) {
 #define CHECK_BIT(val, pos) (((val) & BIT(pos)) != 0)
 
 //
-// Boolean helpers
+// Booleans
 //
 
 #ifndef __cplusplus
+	#define clibx_isset_boolean
     #define clibx_bool  int
     #define clibx_true  1
     #define clibx_false 0
@@ -435,15 +563,15 @@ typedef struct {
     str *data;
     size_t length;
     size_t capacity;
-} str_vec;
+} clibx_str_vec;
 
 /*
  * vec_init
  * --------------------------------------
  * Initialize an empty string vector.
  * */
-static inline str_vec vec_init(void) {
-    return (str_vec){ .data = NULL, .length = 0, .capacity = 0 };
+static inline clibx_str_vec vec_init(void) {
+    return (clibx_str_vec){ .data = NULL, .length = 0, .capacity = 0 };
 }
 
 /*
@@ -451,10 +579,10 @@ static inline str_vec vec_init(void) {
  * --------------------------------------
  * Append a string to the vector.
  * */
-static inline void vec_push(str_vec *vec, str value) {
+static inline void vec_push(clibx_str_vec *vec, str value) {
     if (vec->length >= vec->capacity) {
         size_t new_cap = vec->capacity == 0 ? 8 : vec->capacity * 2;
-        vec->data = realloc(vec->data, sizeof(str) * new_cap);
+        vec->data = (str *)realloc(vec->data, sizeof(str) * new_cap);
         ASSERT(vec->data != NULL, "vec_push: realloc failed");
         vec->capacity = new_cap;
     }
@@ -467,7 +595,7 @@ static inline void vec_push(str_vec *vec, str value) {
  * Free the vector's internal data.
  * Does NOT free individual strings.
  * */
-static inline void vec_free(str_vec *vec) {
+static inline void vec_free(clibx_str_vec *vec) {
     FREE(vec->data);
     vec->length = 0;
     vec->capacity = 0;
@@ -511,8 +639,8 @@ static inline str strtrim(str s) {
  * --------------------------------------
  * Time complexity: O(n)
  * */
-static inline str_vec strsplit(str input, char delim) {
-    str_vec result = vec_init();
+static inline clibx_str_vec strsplit(str input, char delim) {
+    clibx_str_vec result = vec_init();
     char *copy = strdup(input);
     char delim_str[2] = {delim, '\0'};
     char *token = strtok(copy, delim_str);
