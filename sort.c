@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    clibx_str_vec lines = vec_init();
+    clibx_str_vec lines = clibx_vec_init();
     clibx_bool reverse = clibx_false;
     str file = NULL;
 
@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
     str line = NULL;
     size_t len = 0;
     while (getline(&line, &len, fp) != -1) {
-        vec_push(&lines, strdup(line));
+        clibx_vec_push(&lines, strdup(line));
     }
 
     free(line);
@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
     FOR(i, lines.length) {
         free(lines.data[i]);
     }
-    vec_free(&lines);
+    clibx_vec_free(&lines);
 
     return EXIT_SUCCESS;
 }

@@ -118,12 +118,12 @@ int main(int argc, char **argv) {
         ERROR("cannot open directory '%s': %s", dir, strerror(errno));
     }
 
-    clibx_str_vec entries = vec_init();
+    clibx_str_vec entries = clibx_vec_init();
     struct dirent *ep;
 
     while ((ep = readdir(dp)) != NULL) {
         if (!show_hidden && ep->d_name[0] == '.') continue;
-        vec_push(&entries, strdup(ep->d_name));
+        clibx_vec_push(&entries, strdup(ep->d_name));
     }
     closedir(dp);
 
@@ -134,7 +134,7 @@ int main(int argc, char **argv) {
     }
 
     FOR(i, entries.length) {
-        str path = path_join(dir, entries.data[i]);
+        str path = clibx_path_join(dir, entries.data[i]);
         list_file(path, entries.data[i], long_format);
         free(path);
     }
@@ -142,7 +142,7 @@ int main(int argc, char **argv) {
     FOR(i, entries.length) {
         free(entries.data[i]);
     }
-    vec_free(&entries);
+    clibx_vec_free(&entries);
 
     return EXIT_SUCCESS;
 }

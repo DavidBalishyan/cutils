@@ -55,13 +55,13 @@ int main(int argc, char **argv) {
     str src = argv[1];
     str dest = argv[2];
 
-    if (!path_exists(src)) {
+    if (!clibx_path_exists(src)) {
         ERROR("source '%s' does not exist", src);
     }
 
-    if (path_is_dir(dest)) {
-        str base = path_basename(src);
-        str full_dest = path_join(dest, base);
+    if (clibx_path_is_dir(dest)) {
+        str base = clibx_path_basename(src);
+        str full_dest = clibx_path_join(dest, base);
         copy_file(src, full_dest);
         free(base);
         free(full_dest);

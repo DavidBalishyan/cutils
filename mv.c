@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     str src = argv[1];
     str dest = argv[2];
 
-    if (!path_exists(src)) {
+    if (!clibx_path_exists(src)) {
         ERROR("source '%s' does not exist", src);
     }
 

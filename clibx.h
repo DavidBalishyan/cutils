@@ -63,7 +63,7 @@ typedef char *str;
  * Time complexity: O(n)
  * Space complexity: O(1)
  * */
-static inline void print_int_array(const int *arr, size_t len) {
+static inline void clibx_print_int_array(const int *arr, size_t len) {
     printf("[");
     for (size_t i = 0; i < len; i++) {
         printf("%d", arr[i]);
@@ -80,7 +80,7 @@ static inline void print_int_array(const int *arr, size_t len) {
  * Time complexity: O(n)
  * Space complexity: O(1)
  * */
-static inline void print_double_array(const double *arr, size_t len) {
+static inline void clibx_print_double_array(const double *arr, size_t len) {
     printf("[");
     for (size_t i = 0; i < len; i++) {
         printf("%f", arr[i]);
@@ -97,7 +97,7 @@ static inline void print_double_array(const double *arr, size_t len) {
  * Time complexity: O(n)
  * Space complexity: O(1)
  * */
-static inline void print_char_array(const char *arr, size_t len) {
+static inline void clibx_print_char_array(const char *arr, size_t len) {
     printf("[");
     for (size_t i = 0; i < len; i++) {
         printf("'%c'", arr[i]);
@@ -547,7 +547,7 @@ static inline double clibx_round(double x) {
  * --------------------------------------
  * Time complexity: O(n)
  * */
-static inline void read_line(char *buffer, size_t size) {
+static inline void clibx_read_line(char *buffer, size_t size) {
     if (fgets(buffer, size, stdin)) {
         size_t len = strlen(buffer);
         if (len > 0 && buffer[len - 1] == '\n')
@@ -570,7 +570,7 @@ typedef struct {
  * --------------------------------------
  * Initialize an empty string vector.
  * */
-static inline clibx_str_vec vec_init(void) {
+static inline clibx_str_vec clibx_vec_init(void) {
     return (clibx_str_vec){ .data = NULL, .length = 0, .capacity = 0 };
 }
 
@@ -579,7 +579,7 @@ static inline clibx_str_vec vec_init(void) {
  * --------------------------------------
  * Append a string to the vector.
  * */
-static inline void vec_push(clibx_str_vec *vec, str value) {
+static inline void clibx_vec_push(clibx_str_vec *vec, str value) {
     if (vec->length >= vec->capacity) {
         size_t new_cap = vec->capacity == 0 ? 8 : vec->capacity * 2;
         vec->data = (str *)realloc(vec->data, sizeof(str) * new_cap);
@@ -595,7 +595,7 @@ static inline void vec_push(clibx_str_vec *vec, str value) {
  * Free the vector's internal data.
  * Does NOT free individual strings.
  * */
-static inline void vec_free(clibx_str_vec *vec) {
+static inline void clibx_vec_free(clibx_str_vec *vec) {
     FREE(vec->data);
     vec->length = 0;
     vec->capacity = 0;
@@ -613,7 +613,7 @@ static inline void vec_free(clibx_str_vec *vec) {
  * --------------------------------------
  * Time complexity: O(n)
  * */
-static inline str strtrim(str s) {
+static inline str clibx_strtrim(str s) {
     if (!s || *s == '\0') return strdup("");
 
     str copy = strdup(s);
@@ -639,14 +639,14 @@ static inline str strtrim(str s) {
  * --------------------------------------
  * Time complexity: O(n)
  * */
-static inline clibx_str_vec strsplit(str input, char delim) {
-    clibx_str_vec result = vec_init();
+static inline clibx_str_vec clibx_strsplit(str input, char delim) {
+    clibx_str_vec result = clibx_vec_init();
     char *copy = strdup(input);
     char delim_str[2] = {delim, '\0'};
     char *token = strtok(copy, delim_str);
 
     while (token != NULL) {
-        vec_push(&result, strdup(token));
+        clibx_vec_push(&result, strdup(token));
         token = strtok(NULL, delim_str);
     }
 
@@ -662,7 +662,7 @@ static inline clibx_str_vec strsplit(str input, char delim) {
  * --------------------------------------
  * Time complexity: O(n)
  * */
-static inline str strjoin(str *arr, size_t len, str sep) {
+static inline str clibx_strjoin(str *arr, size_t len, str sep) {
     if (len == 0) return strdup("");
 
     size_t total_len = 0;
@@ -695,7 +695,7 @@ static inline str strjoin(str *arr, size_t len, str sep) {
  * --------------------------------------
  * Converts string to lowercase in place. Returns same pointer.
  * */
-static inline str str_to_lower(str s) {
+static inline str clibx_str_to_lower(str s) {
     for (size_t i = 0; s[i]; i++) {
         if (s[i] >= 'A' && s[i] <= 'Z')
             s[i] = s[i] + 32;
@@ -708,7 +708,7 @@ static inline str str_to_lower(str s) {
  * --------------------------------------
  * Converts string to uppercase in place. Returns same pointer.
  * */
-static inline str str_to_upper(str s) {
+static inline str clibx_str_to_upper(str s) {
     for (size_t i = 0; s[i]; i++) {
         if (s[i] >= 'a' && s[i] <= 'z')
             s[i] = s[i] - 32;
@@ -725,7 +725,7 @@ static inline str str_to_upper(str s) {
  * --------------------------------------
  * Returns the filename component of a path.
  * */
-static inline str path_basename(str path) {
+static inline str clibx_path_basename(str path) {
     char *copy = strdup(path);
     str result = strdup(basename(copy));
     free(copy);
@@ -737,7 +737,7 @@ static inline str path_basename(str path) {
  * --------------------------------------
  * Returns the directory component of a path.
  * */
-static inline str path_dirname(str path) {
+static inline str clibx_path_dirname(str path) {
     char *copy = strdup(path);
     str result = strdup(dirname(copy));
     free(copy);
@@ -749,8 +749,8 @@ static inline str path_dirname(str path) {
  * --------------------------------------
  * Returns the file extension (without dot), or empty string.
  * */
-static inline str path_extension(str path) {
-    str base = path_basename(path);
+static inline str clibx_path_extension(str path) {
+    str base = clibx_path_basename(path);
     str dot = strrchr(base, '.');
     str ext = dot ? strdup(dot + 1) : strdup("");
     free(base);
@@ -763,7 +763,7 @@ static inline str path_extension(str path) {
  * Joins two path components with '/'.
  * Returns a newly allocated string. Caller must free.
  * */
-static inline str path_join(str a, str b) {
+static inline str clibx_path_join(str a, str b) {
     size_t len_a = strlen(a);
     size_t len_b = strlen(b);
     size_t sep = (len_a > 0 && a[len_a - 1] != '/') ? 1 : 0;
@@ -780,7 +780,7 @@ static inline str path_join(str a, str b) {
  * --------------------------------------
  * Checks if a path exists on disk.
  * */
-static inline clibx_bool path_exists(str path) {
+static inline clibx_bool clibx_path_exists(str path) {
     return access(path, F_OK) == 0;
 }
 
@@ -789,7 +789,7 @@ static inline clibx_bool path_exists(str path) {
  * --------------------------------------
  * Checks if a path is a directory.
  * */
-static inline clibx_bool path_is_dir(str path) {
+static inline clibx_bool clibx_path_is_dir(str path) {
     struct stat st;
     return (stat(path, &st) == 0 && S_ISDIR(st.st_mode));
 }
@@ -799,7 +799,7 @@ static inline clibx_bool path_is_dir(str path) {
  * --------------------------------------
  * Checks if a path is a regular file.
  * */
-static inline clibx_bool path_is_file(str path) {
+static inline clibx_bool clibx_path_is_file(str path) {
     struct stat st;
     return (stat(path, &st) == 0 && S_ISREG(st.st_mode));
 }
@@ -809,7 +809,7 @@ static inline clibx_bool path_is_file(str path) {
  * --------------------------------------
  * Returns file size in bytes, or -1 on error.
  * */
-static inline long path_file_size(str path) {
+static inline long clibx_path_file_size(str path) {
     struct stat st;
     if (stat(path, &st) != 0) return -1;
     return (long)st.st_size;
@@ -819,11 +819,45 @@ static inline long path_file_size(str path) {
 // Hash Map
 //
 
+/*
+ * CLIBX_HASHMAP - Type-agnostic hash map
+ * --------------------------------------
+ * A generic hash map implementation supporting arbitrary key/value types.
+ * Uses separate chaining for collision resolution.
+ *
+ * Users provide:
+ *   - hash_fn:  hash function for keys
+ *   - cmp_fn:   key comparison function (return non-zero if equal)
+ *   - free_key: destructor for keys (can be NULL if keys don't need freeing)
+ *   - free_val: destructor for values (can be NULL if values don't need freeing)
+ *
+ * A string-specialized convenience API (hashmap_init_str, etc.) is
+ * provided for the common str→str use case.
+ * --------------------------------------
+ */
+
 #define CLIBX_HASHMAP_DEFAULT_CAPACITY 64
 
+typedef unsigned long (*clibx_hash_fn)(void *key);
+typedef int           (*clibx_cmp_fn)(void *a, void *b);
+typedef void          (*clibx_free_fn)(void *data);
+
+static inline unsigned long clibx_hashmap_djb2(void *key) {
+    unsigned long hash = 5381;
+    int c;
+    str s = (str)key;
+    while ((c = *s++))
+        hash = ((hash << 5) + hash) + c;
+    return hash;
+}
+
+static inline int clibx_hashmap_str_cmp(void *a, void *b) {
+    return STREQ((str)a, (str)b);
+}
+
 typedef struct clibx_hashmap_entry {
-    str key;
-    str value;
+    void *key;
+    void *value;
     struct clibx_hashmap_entry *next;
 } clibx_hashmap_entry;
 
@@ -831,57 +865,110 @@ typedef struct {
     clibx_hashmap_entry **buckets;
     size_t capacity;
     size_t count;
+    clibx_hash_fn hash_fn;
+    clibx_cmp_fn  cmp_fn;
+    clibx_free_fn free_key;
+    clibx_free_fn free_val;
 } clibx_hashmap;
-
-/*
- * hashmap_hash
- * --------------------------------------
- * Simple DJB2 hash function.
- * */
-static inline unsigned long hashmap_hash(str key) {
-    unsigned long hash = 5381;
-    int c;
-    while ((c = *key++))
-        hash = ((hash << 5) + hash) + c;
-    return hash;
-}
 
 /*
  * hashmap_init
  * --------------------------------------
- * Create a new empty hashmap.
- * */
-static inline clibx_hashmap hashmap_init(void) {
+ * Create a new empty hashmap with custom callbacks.
+ *
+ * Parameters:
+ *   hash_fn  - hash function for keys
+ *   cmp_fn   - key comparison function (return non-zero if equal)
+ *   free_key - destructor for keys (NULL if no cleanup needed)
+ *   free_val - destructor for values (NULL if no cleanup needed)
+ *
+ * Example (generic):
+ *   clibx_hashmap map = clibx_hashmap_init(my_hash, my_cmp, NULL, NULL);
+ *
+ * Example (strings):
+ *   clibx_hashmap map = clibx_hashmap_init_str();
+ * --------------------------------------
+ */
+static inline clibx_hashmap clibx_hashmap_init(
+    clibx_hash_fn hash_fn,
+    clibx_cmp_fn  cmp_fn,
+    clibx_free_fn free_key,
+    clibx_free_fn free_val
+) {
     clibx_hashmap map;
-    map.capacity = CLIBX_HASHMAP_DEFAULT_CAPACITY;
-    map.count = 0;
-    map.buckets = NEW_ARRAY(clibx_hashmap_entry*, map.capacity);
+    map.capacity  = CLIBX_HASHMAP_DEFAULT_CAPACITY;
+    map.count     = 0;
+    map.hash_fn   = hash_fn;
+    map.cmp_fn    = cmp_fn;
+    map.free_key  = free_key;
+    map.free_val  = free_val;
+    map.buckets   = NEW_ARRAY(clibx_hashmap_entry*, map.capacity);
     memset(map.buckets, 0, sizeof(clibx_hashmap_entry*) * map.capacity);
     return map;
+}
+
+/*
+ * hashmap_init_str
+ * --------------------------------------
+ * Convenience: create a string-to-string hashmap.
+ * Uses DJB2 hashing, strcmp-based comparison, and free() for both keys and values.
+ *
+ * Example:
+ *   clibx_hashmap map = clibx_hashmap_init_str();
+ *   clibx_hashmap_put(&map, "name", strdup("Alice"), free, free);
+ *   char *v = (char*)clibx_hashmap_get(&map, "name");
+ *   clibx_hashmap_free(&map);
+ * --------------------------------------
+ */
+static inline clibx_hashmap clibx_hashmap_init_str(void) {
+    return clibx_hashmap_init(
+        clibx_hashmap_djb2,
+        clibx_hashmap_str_cmp,
+        free,
+        free
+    );
 }
 
 /*
  * hashmap_put
  * --------------------------------------
  * Insert or update a key-value pair.
- * */
-static inline void hashmap_put(clibx_hashmap *map, str key, str value) {
-    unsigned long hash = hashmap_hash(key) % map->capacity;
+ * The map takes ownership of both key and value pointers.
+ * If the key already exists, the old value is freed via free_val
+ * before storing the new value.
+ *
+ * Parameters:
+ *   map   - pointer to the hashmap
+ *   key   - key pointer (ownership transferred)
+ *   value - value pointer (ownership transferred)
+ *
+ * Example:
+ *   clibx_hashmap_put(&map, strdup("key"), strdup("value"), free, free);
+ * --------------------------------------
+ */
+static inline void clibx_hashmap_put(
+    clibx_hashmap *map,
+    void *key,
+    void *value
+) {
+    unsigned long hash = map->hash_fn(key) % map->capacity;
     clibx_hashmap_entry *entry = map->buckets[hash];
 
     while (entry != NULL) {
-        if (STREQ(entry->key, key)) {
-            free(entry->value);
-            entry->value = strdup(value);
+        if (map->cmp_fn(entry->key, key)) {
+            if (map->free_key) map->free_key(entry->key);
+            if (map->free_val) map->free_val(entry->value);
+            entry->key   = key;
+            entry->value = value;
             return;
         }
         entry = entry->next;
     }
 
     clibx_hashmap_entry *new_entry = NEW_ZEROED(clibx_hashmap_entry);
-    new_entry->key = strdup(key);
-    new_entry->value = strdup(value);
-    new_entry->next = map->buckets[hash];
+    new_entry->key   = key;
+    new_entry->value = value;
+    new_entry->next  = map->buckets[hash];
     map->buckets[hash] = new_entry;
     map->count++;
 }
@@ -889,14 +976,18 @@ static inline void hashmap_put(clibx_hashmap *map, str key, str value) {
 /*
  * hashmap_get
  * --------------------------------------
- * Get value by key. Returns NULL if not found.
- * */
-static inline str hashmap_get(clibx_hashmap *map, str key) {
-    unsigned long hash = hashmap_hash(key) % map->capacity;
+ * Look up a value by key.  Returns NULL if the key is not found.
+ *
+ * Example:
+ *   char *v = (char*)clibx_hashmap_get(&map, "name");
+ * --------------------------------------
+ */
+static inline void *clibx_hashmap_get(clibx_hashmap *map, void *key) {
+    unsigned long hash = map->hash_fn(key) % map->capacity;
     clibx_hashmap_entry *entry = map->buckets[hash];
 
     while (entry != NULL) {
-        if (STREQ(entry->key, key))
+        if (map->cmp_fn(entry->key, key))
             return entry->value;
         entry = entry->next;
     }
@@ -906,30 +997,74 @@ static inline str hashmap_get(clibx_hashmap *map, str key) {
 /*
  * hashmap_contains
  * --------------------------------------
- * Check if key exists in hashmap.
- * */
-static inline clibx_bool hashmap_contains(clibx_hashmap *map, str key) {
-    return hashmap_get(map, key) != NULL;
+ * Return non-zero if the key exists in the map.
+ *
+ * Example:
+ *   if (clibx_hashmap_contains(&map, "name")) { ... }
+ * --------------------------------------
+ */
+static inline clibx_bool clibx_hashmap_contains(clibx_hashmap *map, void *key) {
+    return clibx_hashmap_get(map, key) != NULL;
+}
+
+/*
+ * hashmap_remove
+ * --------------------------------------
+ * Remove a key-value pair from the map.
+ * The key and value are freed via the map's free_key / free_val callbacks.
+ * Returns 1 if the key was found and removed, 0 otherwise.
+ *
+ * Example:
+ *   clibx_hashmap_remove(&map, "name");
+ * --------------------------------------
+ */
+static inline int clibx_hashmap_remove(clibx_hashmap *map, void *key) {
+    unsigned long hash = map->hash_fn(key) % map->capacity;
+    clibx_hashmap_entry *entry = map->buckets[hash];
+    clibx_hashmap_entry *prev = NULL;
+
+    while (entry != NULL) {
+        if (map->cmp_fn(entry->key, key)) {
+            if (prev)
+                prev->next = entry->next;
+            else
+                map->buckets[hash] = entry->next;
+
+            if (map->free_key) map->free_key(entry->key);
+            if (map->free_val) map->free_val(entry->value);
+            free(entry);
+            map->count--;
+            return 1;
+        }
+        prev  = entry;
+        entry = entry->next;
+    }
+    return 0;
 }
 
 /*
  * hashmap_free
  * --------------------------------------
  * Free all memory used by the hashmap.
- * */
-static inline void hashmap_free(clibx_hashmap *map) {
+ * Calls free_key / free_val on every entry before freeing the bucket array.
+ *
+ * Example:
+ *   clibx_hashmap_free(&map);
+ * --------------------------------------
+ */
+static inline void clibx_hashmap_free(clibx_hashmap *map) {
     for (size_t i = 0; i < map->capacity; i++) {
         clibx_hashmap_entry *entry = map->buckets[i];
         while (entry != NULL) {
             clibx_hashmap_entry *next = entry->next;
-            free(entry->key);
-            free(entry->value);
+            if (map->free_key) map->free_key(entry->key);
+            if (map->free_val) map->free_val(entry->value);
             free(entry);
             entry = next;
         }
     }
     FREE(map->buckets);
-    map->count = 0;
+    map->count    = 0;
     map->capacity = 0;
 }
 

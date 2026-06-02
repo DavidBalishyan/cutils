@@ -8,7 +8,7 @@
  * though not optimized for extremely large files.
  */
 static void tail_file(str path, int n) {
-    clibx_str_vec lines = vec_init();
+    clibx_str_vec lines = clibx_vec_init();
     FILE *fp = fopen(path, "r");
     if (!fp) {
         ERROR("cannot open '%s': %s", path, strerror(errno));
@@ -17,7 +17,7 @@ static void tail_file(str path, int n) {
     str line = NULL;
     size_t len = 0;
     while (getline(&line, &len, fp) != -1) {
-        vec_push(&lines, strdup(line));
+        clibx_vec_push(&lines, strdup(line));
     }
 
     free(line);
@@ -29,7 +29,7 @@ static void tail_file(str path, int n) {
         free(lines.data[i]);
     }
 
-    vec_free(&lines);
+    clibx_vec_free(&lines);
 }
 
 /*
@@ -65,12 +65,12 @@ int main(int argc, char **argv) {
     }
 
     if (!file) {
-        clibx_str_vec lines = vec_init();
+        clibx_str_vec lines = clibx_vec_init();
         str line = NULL;
         size_t len = 0;
 
         while (getline(&line, &len, stdin) != -1) {
-            vec_push(&lines, strdup(line));
+            clibx_vec_push(&lines, strdup(line));
         }
         free(line);
 
@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
             printf("%s", lines.data[i]);
             free(lines.data[i]);
         }
-        vec_free(&lines);
+        clibx_vec_free(&lines);
         return EXIT_SUCCESS;
     }
 
