@@ -178,5 +178,5 @@ Moves or renames a file using the POSIX `rename()` syscall
 
 ## License
 
-This project is licensed under the [MIT](https://opensource.org/license/MIT) license.
+This project is licensed under the [GPL-3.0](https://opensource.org/license/gpl-3.0) license.
 See the [LICENSE](LICENSE) file for details.
