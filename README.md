@@ -18,18 +18,28 @@ All programs are compiled with [`clibx.h`](https://davidbalishyan.github.io/clib
 
 ## Implemented tools
 
-| Tool     | Binary   | Primary behavior | Notes |
-|----------|----------|------------------|-------|
-| `ccat`   | `bin/ccat` | Print a file to stdout character-by-character | Simple file reader; adds a trailing newline. |
-| `cecho`  | `bin/cecho` | Print command arguments separated by spaces | No special escape handling. |
-| `cps`    | `bin/cps` | List running Linux processes from `/proc` | Reads `/proc/<pid>/cmdline`. Linux-only. |
-| `cls`    | `bin/cls` | List directory contents | Supports `-l`, `-a`, and `-la`. |
-| `cwc`    | `bin/cwc` | Count lines, words, and bytes | Accepts either stdin or one or more files. |
-| `chead`  | `bin/chead` | Print the first N lines of input | Supports `-nN` and `-n N`. |
-| `ctail`  | `bin/ctail` | Print the last N lines of input | Uses a dynamic line buffer. |
-| `csort`  | `bin/csort` | Sort lines lexicographically | Supports reverse order. |
-| `ccp`    | `bin/ccp` | Copy files | Preserves filename when destination is a directory. |
-| `cmv`    | `bin/cmv` | Move/rename files | Wraps `rename()`. |
+Sources are organized by GNU coreutils category:
+
+| Category     | Directory             | Tools                         |
+|--------------|-----------------------|-------------------------------|
+| File utils   | `src/fileutils/`      | `cat`, `cp`, `ls`, `mv`       |
+| Text utils   | `src/textutils/`      | `head`, `sort`, `tail`, `wc`  |
+| Shell utils  | `src/shellutils/`     | `echo`, `ps`                  |
+
+### Tool reference
+
+| Tool   | Primary behavior                                                   |
+|--------|--------------------------------------------------------------------|
+| `cat`  | Print a file to stdout character-by-character; adds trailing newline. |
+| `echo` | Print command arguments separated by spaces. No special escape handling. |
+| `ps`   | List running Linux processes from `/proc`. Linux-only.             |
+| `ls`   | List directory contents. Supports `-l`, `-a`, and `-la`.           |
+| `wc`   | Count lines, words, and bytes. Accepts stdin or one or more files. |
+| `head` | Print the first N lines of input. Supports `-nN` and `-n N`.       |
+| `tail` | Print the last N lines of input. Uses a dynamic line buffer.       |
+| `sort` | Sort lines lexicographically. Supports reverse order.              |
+| `cp`   | Copy files. Preserves filename when destination is a directory.    |
+| `mv`   | Move/rename files. Wraps `rename()`.                               |
 
 ---
 
@@ -48,6 +58,14 @@ make
 
 This compiles each utility into the `bin/` directory.
 
+By default binaries are named `cat`, `cp`, `ls`, etc. (no prefix). To build with a `c` prefix:
+
+```sh
+make TARGET_PREFIX=c
+```
+
+This produces `ccat`, `ccp`, `cls`, etc.
+
 ### Cleaning
 
 ```sh
@@ -63,7 +81,7 @@ make install
 Install to an alternate directory:
 
 ```sh
-make install PREFIX=/usr/local
+make install INSTALL_PREFIX=/usr/local
 ```
 
 ### Uninstall
@@ -76,35 +94,35 @@ make uninstall
 
 ## Usage
 
-### ccat
+### cat
 
 ```sh
-./bin/ccat file.txt
+./bin/cat file.txt
 ```
 
 Prints the file contents to stdout and appends a final newline.
 
-### cecho
+### echo
 
 ```sh
-./bin/cecho Hello world
+./bin/echo Hello world
 ```
 
 Prints each argument separated by a single space.
 
-### cps
+### ps
 
 ```sh
-./bin/cps
+./bin/ps
 ```
 
 Lists processes by reading `/proc` and printing PID + command line.
 This utility is intended for Linux systems only.
 
-### cls
+### ls
 
 ```sh
-./bin/cls [options] [directory]
+./bin/ls [options] [directory]
 ```
 
 Options:
@@ -112,57 +130,57 @@ Options:
 - `-a`, `--all` - show hidden files.
 - `-la`, `-al`, `--long-all` - combine long format and hidden files.
 
-### cwc
+### wc
 
 ```sh
-./bin/cwc [files...]
+./bin/wc [files...]
 ```
 
 Counts lines, words, and bytes.
 If no filename is provided, it reads from stdin.
 
-### chead
+### head
 
 ```sh
-./bin/chead [-n N] [file]
+./bin/head [-n N] [file]
 ```
 
 Prints the first `N` lines of a file or stdin. Defaults to `10` lines.
 Supports both `-n10` and `-n 10` forms.
 
-### ctail
+### tail
 
 ```sh
-./bin/ctail [-n N] [file]
+./bin/tail [-n N] [file]
 ```
 
 Prints the last `N` lines of a file or stdin. Defaults to `10` lines.
 
-### csort
+### sort
 
 ```sh
-./bin/csort [options] [file]
+./bin/sort [options] [file]
 ```
 
 Options:
 - `-r`, `--reverse` - sort in reverse order.
 
-### ccp
+### cp
 
 ```sh
-./bin/ccp <source> <destination>
+./bin/cp <source> <destination>
 ```
 
 Copies a file to the destination path. If the destination is a directory,
-`ccp` copies the file into that directory while preserving the source filename.
+`cp` copies the file into that directory while preserving the source filename.
 
-### cmv
+### mv
 
 ```sh
-./bin/cmv <source> <destination>
+./bin/mv <source> <destination>
 ```
 
-Moves or renames a file using the POSIX `rename()` syscall
+Moves or renames a file using the POSIX `rename()` syscall.
 
 ---
 
@@ -170,9 +188,9 @@ Moves or renames a file using the POSIX `rename()` syscall
 
 - Most utilities are intentionally minimal: they focus on readable control flow rather than handling every edge case.
 - `clibx.h` provides shared helpers for memory, strings, error reporting, and dynamic arrays.
-- `chead` and `ctail` use `getline()` to support arbitrary-length input lines.
-- `csort` loads the entire input into memory before sorting, which is fine for small to moderate text but not optimized for very large files.
-- `cps` enumerates numeric directories in `/proc`, so it is only usable on Linux-like systems.
+- `head` and `tail` use `getline()` to support arbitrary-length input lines.
+- `sort` loads the entire input into memory before sorting, which is fine for small to moderate text but not optimized for very large files.
+- `ps` enumerates numeric directories in `/proc`, so it is only usable on Linux-like systems.
 
 ---
 

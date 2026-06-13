@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
     clibx_bool show_hidden = clibx_false;
     str dir = ".";
 
-    FOR(i, argc) {
+    FOR_RANGE(i, 1, argc) {
         if (STREQ(argv[i], "-l") || STREQ(argv[i], "--long")) {
             long_format = clibx_true;
         } else if (STREQ(argv[i], "-a") || STREQ(argv[i], "--all")) {
